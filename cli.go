@@ -24,10 +24,11 @@ type CLI struct {
 }
 
 type Option struct {
-	DryRun  bool   `long:"dry-run" description:"Just dry run"`
-	Config  string `long:"config" description:"Path to YAML file that labels are defined" default:"labels.yaml"`
-	Import  bool   `long:"import" description:"Import existing labels if enabled"`
-	Version bool   `long:"version" description:"Show version"`
+	DryRun   bool   `long:"dry-run" description:"Just dry run"`
+	Config   string `long:"config" description:"Path to YAML file that labels are defined" default:"labels.yaml"`
+	Import   bool   `long:"import" description:"Import existing labels if enabled"`
+	Version  bool   `long:"version" description:"Show version"`
+	HostName string `long:"hostname" description:"Target github hostname" default:"github.com"`
 }
 
 func (c *CLI) Run(args []string) error {
@@ -42,7 +43,7 @@ func (c *CLI) Run(args []string) error {
 	}
 	c.Defined = cfg
 
-	client, err := github.NewClient(c.Option.DryRun)
+	client, err := github.NewClient(c.Option.DryRun, c.Option.HostName)
 	if err != nil {
 		return err
 	}

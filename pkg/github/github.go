@@ -3,6 +3,7 @@ package github
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 
@@ -15,8 +16,8 @@ type Client struct {
 	Logger  *log.Logger
 }
 
-func NewClient(dryrun bool) (*Client, error) {
-	labeler, err := newGitHubClient(dryrun)
+func NewClient(dryrun bool, hostname string) (*Client, error) {
+	labeler, err := newGitHubClient(dryrun, hostname)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +41,7 @@ type Labeler interface {
 	DeleteLabel(ctx context.Context, owner string, repo string, name string) (*github.Response, error)
 }
 
-func newGitHubClient(dryrun bool) (Labeler, error) {
+func newGitHubClient(dryrun bool, hostname string) (Labeler, error) {
 	token := os.Getenv("GITHUB_TOKEN")
 	if token == "" {
 		return nil, errors.New("GITHUB_TOKEN is missing")
@@ -50,7 +51,16 @@ func newGitHubClient(dryrun bool) (Labeler, error) {
 		AccessToken: token,
 	})
 	tc := oauth2.NewClient(oauth2.NoContext, ts)
+
 	client := github.NewClient(tc)
+	var err error
+	if hostname != "github.com" {
+		baseURL := fmt.Sprintf("https://%s/api/v3", hostname)
+		client, err = github.NewEnterpriseClient(baseURL, baseURL+"/upload", tc)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if dryrun {
 		return githubClientDryRun{client}, nil
